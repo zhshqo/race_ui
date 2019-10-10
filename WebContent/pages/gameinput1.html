@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>比赛场次列表</title>
+
+<link rel="stylesheet" href="../plugins/bootstrap-3.3.7/css/bootstrap.min.css">
+
+
+</head>
+<body>
+
+<div id="app">
+	<div class="container">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				比赛场次列表
+			</div>
+			<div class="panel-body">
+				<form class="form form-inline">
+					<div class="form-group">
+						<label class="control-label" style="width:100px;text-align:right;">场次</label>
+						<input class="form-control" type="text" v-model="gameConditon.game_no">
+					</div>
+					<div class="form-group">
+						<label class="control-label" style="width:100px;text-align:right;">比赛开始时间</label>
+						<input class="form-control" type="text" v-model="gameConditon.start_time">
+					</div>
+					<div class="form-group">
+						<label class="control-label" style="width:100px;text-align:right;">地点</label>
+						<input class="form-control" type="text" v-model="gameConditon.location">
+					</div>
+					<div class="form-group">
+						<label class="control-label" style="width:100px;text-align:right;">裁判姓名</label>
+						<input class="form-control" type="text" v-model="gameConditon.judge_names">
+					</div>
+					<div class="form-group">
+						<label class="control-label" style="width:100px;text-align:right;">裁判工号</label>
+						<input class="form-control" type="text" v-model="gameConditon.judge_nos">
+					</div>
+					<div class="form-group">
+						<label class="control-label" style="width:100px;text-align:right;">备注</label>
+						<input class="form-control" type="text" v-model="gameConditon.comment">
+					</div>
+					<div class="form-group">
+						<div style="margin:5px 0;text-align:right;">
+							<button class="btn btn-primary" @click.prevent="loadGames">查询</button>
+						</div>
+					</div>
+				</form>
+				<div>
+					<button class="btn btn-primary" @click="toggleNewGameModalShow">新增</button>
+					<button class="btn btn-warning" @click="deleteGame">删除</button>
+					<button class="btn btn-primary" @click="selectJudges">选择裁判</button>
+				</div>
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<td></td>
+							<td>序号</td>
+							<td>场次</td>
+							<td>比赛开始时间</td>
+							<td>地点</td>
+							<td>裁判姓名</td>
+							<td>裁判工号</td>
+							<td>备注</td>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="(item,index) in gameList">
+							<td><input type="radio" :value="index" v-model="checedGameIndex"></td>
+							<td>{{index+1}}</td>
+							<td>{{item.game_no}}</td>
+							<td>{{item.start_time}}</td>
+							<td>{{item.location}}</td>
+							<td>{{item.judge_names}}</td>
+							<td>{{item.judge_nos}}</td>
+							<td>{{item.comment}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	<div :class="['modal',{'show':newGameModalShow}]">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">新增场次</div>
+				<div class="modal-body">
+					<form class="form form-horizontal">
+						<div class="form-group">
+							<label class="control-label col-xs-2">场次</label>
+							<div class="col-xs-10">
+								<input type="text" class="form-control" v-model="gameNew.game_no">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="control-label col-xs-2">比赛开始日期</label>
+							<div class="col-xs-10">
+								<input type="date" class="form-control" v-model="gameNew.start_time_date">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="control-label col-xs-2">比赛开始时间</label>
+							<div class="col-xs-10">
+								<input type="time" class="form-control" v-model="gameNew.start_time_time">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="control-label col-xs-2">地点</label>
+							<div class="col-xs-10">
+								<input type="text" class="form-control" v-model="gameNew.location">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="control-label col-xs-2">备注</label>
+							<div class="col-xs-10">
+								<input type="text" class="form-control" v-model="gameNew.comment">
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-default" @click="saveGame">保存</button>
+					<button class="btn btn-warning" @click="toggleNewGameModalShow">取消</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div :class="['modal',{'show':newJudgeModalShow}]">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">选择裁判</div>
+				<div class="modal-body" style="height:250px;overflow:scroll;">
+					<table class="table table-bordered table-hover">
+						<thead>
+							<tr>
+								<td></td>
+								<td>序号</td>
+								<td>裁判名称</td>
+								<td>裁判工号</td>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="(item,index) in judgeList">
+								<td><input type="checkbox" :value="index" v-model="checedJudgeIndexs"></td>
+								<td>{{index+1}}</td>
+								<td>{{item.judge_name}}</td>
+								<td>{{item.judge_no}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-default" @click="saveJudgeToGame">保存</button>
+					<button class="btn btn-warning" @click="toggleNewJudgeModalShow">取消</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+</div>
+
+
+<script src="../plugins/jquery-1.9.1/jquery-1.9.1.min.js"></script>
+<script src="../plugins/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+<script src="../plugins/vue-2/vue.min.js"></script>
+<script>
+
+	var url_gamelist="http://localhost:8080/race/game/list";
+	var url_gamesave="http://localhost:8080/race/game/save";
+	var url_gamedelete="http://localhost:8080/race/game/delete";
+	var url_judgelist="http://localhost:8080/race/judge/list";
+	var url_gameupdate="http://localhost:8080/race/game/update";
+	
+	var vm = new Vue({
+		el:"#app",
+		data:{
+			gameList:[],
+			judgeList:[],
+			gameConditon:{
+				game_no:'',
+				start_time:'',
+				location:'',
+				comment:'',
+				judge_names:'',
+				judge_nos:''
+			},
+			gameNew:{
+				game_no:'',
+				start_time:'',
+				start_time_date:'',
+				start_time_time:'',
+				location:'',
+				comment:''
+			},
+			checedGameIndex:null,
+			newGameModalShow:false,
+			newJudgeModalShow:false,
+			checedJudgeIndexs:[],
+		},
+		watch:{
+			'gameNew.start_time_date':{
+				handler:function(val,oldval){
+					this.gameNew.start_time = val + " " + this.gameNew.start_time_time;
+				}
+			},
+			'gameNew.start_time_time':{
+				handler:function(val,oldval){
+					this.gameNew.start_time = this.gameNew.start_time_date + " " + val + ":00";
+				}
+			},
+		},
+		methods:{
+			loadGames:function(){
+				var that = this;
+				$.ajax({
+					url:url_gamelist,
+					type:"POST",
+					contentType:"application/json;charset=utf-8",
+					data:JSON.stringify(that.gameConditon),
+					success:function(response){
+						if(response.status){
+							that.gameList=[];
+							for(var i=0;i<response.result.length;i++){
+								that.gameList.push((response.result)[i]);
+							}
+						}else{
+							alert("查询失败："+response.failReason);
+						}
+					}
+				});
+			},
+			saveGame:function(){
+				var that = this;
+				$.ajax({
+					url:url_gamesave,
+					type:"POST",
+					contentType:"application/json;charset=utf-8",
+					data:JSON.stringify(that.gameNew),
+					success:function(response){
+						if(response.status){
+							that.toggleNewGameModalShow();
+							that.loadGames();
+							alert("保存成功！");
+						}else{
+							alert("保存失败："+response.failReason);
+						}
+					}
+				});
+			},
+			deleteGame:function(){
+				var that = this;
+				if(that.checedGameIndex==null){
+					alert("请先选择一项！")
+					return;
+				}
+				if(!confirm("确定要删除吗？")){
+					return;
+				}
+				
+				$.ajax({
+					url:url_gamedelete,
+					type:"POST",
+					contentType:"application/json;charset=utf-8",
+					data:JSON.stringify(that.gameList[that.checedGameIndex]),
+					success:function(response){
+						if(response.status){
+							that.loadGames();
+							alert("删除成功！");
+						}else{
+							alert("删除失败："+response.failReason);
+						}
+					}
+				});
+			},
+			toggleNewGameModalShow:function(){
+				this.newGameModalShow=!this.newGameModalShow;
+			},
+			toggleNewJudgeModalShow:function(){
+				this.newJudgeModalShow=!this.newJudgeModalShow;
+			},
+			loadJudges:function(){
+				var that = this;
+				$.ajax({
+					url:url_judgelist,
+					type:"GET",
+					success:function(response){
+						if(response.status){
+							that.judgeList=[];
+							for(var i=0;i<response.result.length;i++){
+								that.judgeList.push((response.result)[i]);
+							}
+						}else{
+							alert("查询失败："+response.failReason);
+						}
+					}
+				});
+			},
+			selectJudges:function(){
+				var that = this;
+				if(that.checedGameIndex==null){
+					alert("请先选择一项！")
+					return;
+				}
+				that.toggleNewJudgeModalShow();
+				that.loadJudges();
+			},
+			saveJudgeToGame:function(){
+				var that = this;
+				var judges = [];
+				for(var item in that.checedJudgeIndexs){
+					judges.push(that.judgeList[item]);
+				}
+				var param = {
+						game:that.gameList[that.checedGameIndex],
+						judges:judges
+				};
+				$.ajax({
+					url:url_gameupdate,
+					type:"POST",
+					contentType:"application/json;charset=utf-8",
+					data:JSON.stringify(param),
+					success:function(response){
+						if(response.status){
+							that.loadGames();
+							that.toggleNewJudgeModalShow();
+							alert("保存成功！");
+						}else{
+							alert("保存失败："+response.failReason);
+						}
+					}
+				});
+			},
+		},
+		mounted:function(){
+			this.loadGames();
+		}
+	});
+</script>
+
+</body>
+</html>
